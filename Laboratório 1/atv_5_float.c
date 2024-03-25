@@ -3,18 +3,19 @@
 #include <pthread.h>
 #include <time.h>
 
-#define MAX 1000
+#define MAX 100
 #define TAM 100000
-#define NTHREADS 79
+#define NTHREADS 93
+#define MARGEM 0.00000000001
 
 typedef struct {
     int idThread, nThreads;
-    int *start_vet;
+    float *start_vet;
     int limit;
 } t_Args;
 
-int* init_vet(int tam){
-    int *vetor = (int *) malloc(sizeof(int) * tam);
+float* init_vet(int tam){
+    float *vetor = (float *) malloc(sizeof(float) * tam);
     if (vetor == NULL){
         printf("--ERRO: malloc()\n"); exit(-1);
     }
@@ -22,23 +23,30 @@ int* init_vet(int tam){
     
 }
 
-void rand_vet(int *vetor, int tam){
+// void rand_vet(long int *vetor, int tam){
+//     srand(time(NULL));
+//     for (int i = 0; i < tam; i++){
+//         long int number = rand() % (2*MAX) - MAX; // Random number between -MAX and MAX
+//         vetor[i] = number;
+//     }
+// }
+
+void rand_float_vet(float *vetor, int tam){
     srand(time(NULL));
     for (int i = 0; i < tam; i++){
-        long int number = rand() % (2*MAX) - MAX; // Random number between -MAX and MAX
+        float number = ((2*MAX) * ((float)rand() / RAND_MAX)) - MAX; // Random float between -MAX and MAX
         vetor[i] = number;
     }
 }
 
+// void seq_vet(long int *vetor, int tam){
+//     for (int i = 0; i < tam; i++){
+//         vetor[i] = i + 1;
+//     }
+// }
 
-void seq_vet(int *vetor, int tam){
-    for (int i = 0; i < tam; i++){
-        vetor[i] = i + 1;
-    }
-}
-
-void* duplicate_vet(int *vetor, int tam){
-    int *new_vet = (int *) malloc(sizeof(int) * tam);
+void* duplicate_vet(float *vetor, int tam){
+    float *new_vet = (float *) malloc(sizeof(float) * tam);
     if (new_vet == NULL){
         printf("--ERRO: malloc()\n"); exit(-1);
     }
@@ -49,19 +57,19 @@ void* duplicate_vet(int *vetor, int tam){
     
 }
 
-void print_vet(int *vet, int tam){
+void print_vet(float *vet, int tam){
     for (int i = 0; i < tam; i++){
-        printf("%d ", vet[i]);
+        printf("%.1f ", vet[i]);
     }
     printf("\n");
 }
 
-int testa_result(int *original, int *result, int tam){
+int testa_result(float *original, float *result, int tam){
     for (int i = 0; i < tam; i++){
-        if (result[i] != original[i] * original[i]){
+        if (result[i] > original[i] * original[i] + MARGEM || result[i] < original[i] * original[i] - MARGEM){
             printf("Erro na posição %d\n", i);
-            printf("> Original: %d\n ", original[i]);
-            printf("> Resultado: %d\n ", result[i]);
+            printf("> Original: %.1f\n ", original[i]);
+            printf("> Resultado: %.1f\n ", result[i]);
             return 0;
         }
     }
@@ -73,7 +81,7 @@ void* quad_vet(void *arg){
     t_Args args = *(t_Args*) arg;
     for (int i = 0; i < args.limit; i++){
         args.start_vet[i] = args.start_vet[i] * args.start_vet[i];
-        printf("Sou a thread %d de %d threads e meu resultado é %d\n", args.idThread + 1, args.nThreads, args.start_vet[i]);
+        printf("Sou a thread %d de %d threads e meu resultado é %.1f\n", args.idThread + 1, args.nThreads, args.start_vet[i]);
     }
     free(arg);
     pthread_exit(NULL);
@@ -81,10 +89,11 @@ void* quad_vet(void *arg){
 
 int main(){
 
-    int *vetor = init_vet(TAM);
-    rand_vet(vetor, TAM);
+    float *vetor = init_vet(TAM);
+    //rand_vet(vetor, TAM);
     //seq_vet(vetor, TAM);
-    int *test = duplicate_vet(vetor, TAM);
+    rand_float_vet(vetor, TAM);
+    float *test = duplicate_vet(vetor, TAM);
 
     printf("Vetor original:\n ");
     print_vet(test, TAM);
