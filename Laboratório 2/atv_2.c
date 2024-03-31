@@ -8,8 +8,8 @@
 #include <stdlib.h>
 #include <pthread.h>
 
-#define TESTE
-#define MARGEM 0.000000001 // 10^-9
+// #define TESTE
+#define MARGEM 0.0000001 // 10^-7
 double *vet; // Vetor de reais
 
 typedef struct {
@@ -31,7 +31,9 @@ void *task_sum(void *arg){
     // Soma os elementos do bloco
     for (long int i = start; i < end; i++){
         sum->sum += vet[i];
-        printf("Thread %d: %.18lf\n", args->id, vet[i]);
+        #ifdef TESTE
+            printf("Thread %d: %.18lf\n", args->id, vet[i]);
+        #endif
     }
     printf("Thread %d: %.18lf\n", args->id, sum->sum);
     // Retorna a soma do bloco
@@ -56,9 +58,12 @@ void *task_kahan(void *arg){
         t = sum->sum + y;
         c = (t - sum->sum) - y;
         sum->sum = t;
-        printf("Thread %d: %.18lf\n", args->id, vet[i]);
+        //printf("Thread %d: %.18lf\n", args->id, vet[i]);
     }
-    printf("Thread %d: %.18lf\n", args->id, sum->sum);
+    #ifdef TESTE
+        printf("Thread %d: %.18lf\n", args->id, sum->sum);
+    #endif
+
     // Retorna a soma do bloco
     pthread_exit((void *) sum);
 }
@@ -85,8 +90,11 @@ int main(int argc, char *argv[]){
     t_Sum *retorno; // Retorno das threads
     long int block_size; // Tamanho do bloco
     pthread_t *tid; // Identificadores das threads
-    double resultado_ideal; // Resultado retornado pelo gerador do vetor
     double *threads_return; // Array de retorno das threads
+
+    #ifdef TESTE
+        double resultado_esperado; // Resultado retornado pelo gerador do vetor
+    #endif
 
     // Verifica se o número de argumentos está correto
     if (argc < 2){
@@ -116,7 +124,7 @@ int main(int argc, char *argv[]){
     }
     
     #ifdef TESTE
-        scanf("%lf", &resultado_ideal);
+        scanf("%lf", &resultado_esperado);
     #endif
 
     // Criar as threads
@@ -127,7 +135,7 @@ int main(int argc, char *argv[]){
     
     block_size = tam / n_threads;
     if(!block_size){
-        printf("Aviso! Número de threads maior que o tamanho do vetor\n");
+        printf(">Aviso! Número de threads maior que o tamanho do vetor\n");
     }
 
     for (int i = 0; i < n_threads; i++){
@@ -138,7 +146,7 @@ int main(int argc, char *argv[]){
         arg->block_size = block_size;
         arg->id = i;
     
-        if (pthread_create(tid + i, NULL, task_sum, (void *) arg)){
+        if (pthread_create(tid + i, NULL, task_kahan, (void *) arg)){
             printf("--ERRO: pthread_create()\n"); exit(-1);
         }
     }
@@ -155,7 +163,10 @@ int main(int argc, char *argv[]){
         //     printf("Thread principal: %.18lf\n", vet[i]);
         // }
         threads_return[n_threads] = kahan_sum(vet + block_size * n_threads, tam % n_threads); // Soma o resto do vetor e armazena no último elemento
-        printf("Thread principal: %.18lf\n", threads_return[n_threads]);
+        #ifdef TESTE
+            printf("Thread principal: %.18lf\n", threads_return[n_threads]);
+        #endif
+
     }   else {
         threads_return[n_threads] = 0;
     }
@@ -165,15 +176,19 @@ int main(int argc, char *argv[]){
         if (pthread_join(tid[i], (void **) &retorno)){
             printf("--ERRO: pthread_join()\n"); exit(-1);
         }
-        printf("Thread %d retornou %.18lf\n", i, retorno->sum);
+        #ifdef TESTE
+            printf("Thread %d retornou %.18lf\n", i, retorno->sum);
+        #endif
+
         threads_return[i] = retorno->sum;
     }
     resultado_final = kahan_sum(threads_return, n_threads+1);
     printf("Soma: %.18lf\n", resultado_final);
-    printf("Resultado ideal: %.18lf\n", resultado_ideal);
-
+    
     #ifdef TESTE
-        if (resultado_final > resultado_ideal + MARGEM || resultado_final < resultado_ideal - MARGEM){
+        printf("Resultado esperado: %.18lf\n", resultado_esperado);
+   
+        if (resultado_final > resultado_esperado + MARGEM || resultado_final < resultado_esperado - MARGEM){
             printf(">Erro! Resultado incorreto\n");
         } else {
             printf(">Resultado correto\n");

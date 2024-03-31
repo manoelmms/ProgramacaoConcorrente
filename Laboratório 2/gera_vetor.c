@@ -8,7 +8,8 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define MAX 100 // Máximo valor para os números aleatórios
+#define TEST
+#define MAX 1000 // Máximo valor para os números aleatórios
 
 int main(int argc, char *argv[]){
     long int tam = 0; // Tamanho do vetor
@@ -109,7 +110,10 @@ int main(int argc, char *argv[]){
             break;
     }
 
-    // Long double tem precisão de 18 casas decimais (80 bits)
-    printf("%.18Lf\n", soma); // Imprime a soma dos números gerados para verificação
+    #ifdef TEST
+        // Long double tem precisão de 18 casas decimais (80 bits)
+        printf("%.18Lf\n", soma); // Imprime a soma dos números gerados para verificação
+    #endif
+
     return 0;
 }
