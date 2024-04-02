@@ -21,6 +21,7 @@ int main(int argc, char *argv[]){
 
     if (argc < 2){
         printf("Uso: %s <tamanho do vetor> [-e | -p | -h | -ha]\n", argv[0]);
+        printf("> Modo padrão é randômico\n");
         printf("  -e: Gera uma série de euler\n");
         printf("  -p: Gera uma série de pi\n");
         printf("  -h: Gera uma série harmônica\n");

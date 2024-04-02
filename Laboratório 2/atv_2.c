@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include <math.h>
 
 // #define TESTE
 #define MARGEM 0.0000001 // 10^-7
@@ -43,23 +44,31 @@ void *task_sum(void *arg){
 void *task_kahan(void *arg){
     /*
      * Uso do método de Kahan para reduzir o erro de arredondamento
+     * com o algoritmo otimiado de Neumaier
      */
     t_Args *args = (t_Args *) arg;
     t_Sum *sum = (t_Sum *) malloc(sizeof(t_Sum));
-    sum->sum = 0;
     long int start = args->block_size * args->id; // Início do bloco
     long int end = start + args->block_size; // Fim do bloco
+    double t;
     double c = 0;
-    double y, t;
+    sum->sum = 0;
 
     // Soma os elementos do bloco
     for (long int i = start; i < end; i++){
-        y = vet[i] - c;
-        t = sum->sum + y;
-        c = (t - sum->sum) - y;
+        t = sum->sum + vet[i];
+        if (fabs(sum->sum) >= fabs(t)){ // |sum| >= |t|
+            c += (sum->sum - t) + vet[i]; // se a soma é maior, os menores bits de vet são perdidos
+        } else {
+            c += (vet[i] - t) + sum->sum; // senao, os menores bits de sum são perdidos
+        }
         sum->sum = t;
-        //printf("Thread %d: %.18lf\n", args->id, vet[i]);
+        #ifdef TESTE
+            // printf("Thread %d: %.18lf\n", args->id, vet[i]);
+        #endif
     }
+    sum->sum += c;
+
     #ifdef TESTE
         printf("Thread %d: %.18lf\n", args->id, sum->sum);
     #endif
@@ -69,18 +78,23 @@ void *task_kahan(void *arg){
 }
 
 double kahan_sum(double *vet, long int tam){
+    /*
+     * Algoritmo otimizado de Neumaier 
+     */
     double sum = 0;
     double c = 0;
-    double y, t;
+    double t;
 
-    // Soma os elementos do vetor
     for (long int i = 0; i < tam; i++){
-        y = vet[i] - c;
-        t = sum + y;
-        c = (t - sum) - y;
+        t = sum + vet[i];
+        if (fabs(sum) >= fabs(t)){ // |sum| >= |t|
+            c += (sum - t) + vet[i]; // se a soma é maior, os menores bits de vet são perdidos
+        } else {
+            c += (vet[i] - t) + sum; // senao, os menores bits de sum são perdidos
+        }
         sum = t;
     }
-    return sum;
+    return sum + c;
 }
 
 int main(int argc, char *argv[]){
