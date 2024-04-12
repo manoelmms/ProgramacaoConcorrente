@@ -128,25 +128,7 @@ void *task_multiplica_matrizes(void *arg) {
     pthread_exit(NULL);
 }
 
-Matriz *multiplica_matrizes(Matriz *A, Matriz *B, int n_threads){
-    if (A->colunas != B->linhas) {
-        fprintf(stderr, "Erro: Matrizes incompatíveis para multiplicação\n");
-        return NULL;
-    }
-
-    Matriz *C = (Matriz *) malloc(sizeof(Matriz));
-    if (!C) {
-        fprintf(stderr, "Erro de alocação da matriz\n");
-        return NULL;
-    }
-
-    C->linhas = A->linhas;
-    C->colunas = B->colunas;
-    C->elementos = (float *) malloc(sizeof(float) * C->linhas * C->colunas);
-    if (!C->elementos) {
-        fprintf(stderr, "Erro de alocação da matriz\n");
-        return NULL;
-    }
+void *multiplica_matrizes(Matriz *A, Matriz *B, Matriz *C, int n_threads){
 
     pthread_t *tid = (pthread_t *) malloc(sizeof(pthread_t) * n_threads);
     if (!tid) {
@@ -158,6 +140,7 @@ Matriz *multiplica_matrizes(Matriz *A, Matriz *B, int n_threads){
     if (!block_size) {
         fprintf(stderr, "Número de threads maior que a dimensao Linha da matriz\n");
         return NULL;
+        //fprintf(stderr, "Utilizando thread principal\n");
     }
 
     for (int i = 0; i < n_threads; i++) {
@@ -203,7 +186,7 @@ Matriz *multiplica_matrizes(Matriz *A, Matriz *B, int n_threads){
     }
 
     free(tid);
-    return C;
+    return NULL;
 }
 
 int main(int argc, char *argv[]) {
@@ -221,31 +204,46 @@ int main(int argc, char *argv[]) {
     }
 
     GET_TIME(inicio_init);
-    printf("Lendo matriz A\n");
+    // printf("Lendo matriz A\n");
     A = le_matriz_bin(argv[1]);
     if (!A) return 3;
 
-    printf("Lendo matriz B\n");
+    // printf("Lendo matriz B\n");
     B = le_matriz_bin(argv[2]);
     if (!B) return 4;
+
+    if (A->colunas != B->linhas) {
+        fprintf(stderr, "Erro: Matrizes incompatíveis para multiplicação\n");
+        return 5;
+    }
+
+    C = (Matriz *) malloc(sizeof(Matriz));
+    if (!C) {
+        fprintf(stderr, "Erro de alocação da matriz\n");
+        return 6;
+    }
+    // Inicializa matriz C
+    C->linhas = A->linhas;
+    C->colunas = B->colunas;
+    C->elementos = (float *) malloc(sizeof(float) * C->linhas * C->colunas);
+    if (!C->elementos) {
+        fprintf(stderr, "Erro de alocação da matriz\n");
+        return 7;
+    }
     GET_TIME(fim_init);
 
-    printf("Tempo de inicialização: %f\n", fim_init - inicio_init);
-
-    printf("Multiplicando matrizes\n");
     GET_TIME(inicio_mult);
-    C = multiplica_matrizes(A, B, n_threads);
+    multiplica_matrizes(A, B, C, n_threads);
     GET_TIME(fim_mult);
-    if (!C) return 5;
-    printf("Tempo de multiplicação: %f\n", fim_mult - inicio_mult);
+
 
     #ifdef TEST 
         imprime_matriz(C);
     #endif
 
+    GET_TIME(inicio_end);
     escreve_matriz_bin(argv[4], C); // TODO: Colocar no tempo de finalização ou no tempo de processamento?
     
-    GET_TIME(inicio_end);
     free(A->elementos);
     free(A);
     free(B->elementos);
@@ -253,7 +251,10 @@ int main(int argc, char *argv[]) {
     free(C->elementos);
     free(C);
     GET_TIME(fim_end);
-    printf("Tempo de finalização: %f\n", fim_end - inicio_end);
+
+    // // Exporta os tempos de execução em formato CSV
+    //fprintf(stdout, "inicializacao, multiplicacao, finalizacao, total, threads\n");
+    fprintf(stdout, "%f, %f, %f, %f, %d\n", fim_init - inicio_init, fim_mult - inicio_mult, fim_end - inicio_end, fim_end - inicio_init, n_threads);
     return 0;
 }
     
