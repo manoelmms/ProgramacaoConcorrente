@@ -159,7 +159,7 @@ int main(int argc, char *argv[]) {
 
     // Exporta os tempos de execução em formato CSV
     //fprintf(stdout, "inicializacao, multiplicacao, finalizacao, total, threads\n");
-    fprintf(stdout, "%f, %f, %f, %f, 1\n", fim_init - inicio_init, fim_mult - inicio_mult, fim_end - inicio_end, fim_end - inicio_init);
+    fprintf(stdout, "%f, %f, %f, %f, seq\n", fim_init - inicio_init, fim_mult - inicio_mult, fim_end - inicio_end, fim_end - inicio_init);
     return 0;
 }
     
