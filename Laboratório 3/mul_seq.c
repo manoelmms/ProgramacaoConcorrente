@@ -1,10 +1,13 @@
 /*
  * Multiplicação de matrizes MxN e NxP de forma sequencial
+ * Recebendo duas matrizes em formato de arquivo binário
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include "timer.h"
+
+#define TEMPO
 
 typedef struct {
     int linhas;
@@ -22,7 +25,7 @@ Matriz *le_matriz_bin(const char *arquivo) {
         return NULL;
     }
     
-    descritor_arquivo = fopen(arquivo, "rb");
+    descritor_arquivo = fopen(arquivo, "rb"); //abre o arquivo para leitura binária
     if (!descritor_arquivo) {
         fprintf(stderr, "Erro de abertura do arquivo\n");
         return NULL;
@@ -46,7 +49,7 @@ Matriz *le_matriz_bin(const char *arquivo) {
         return NULL;
     }
 
-    ret = fread(matriz->elementos, sizeof(float), matriz->linhas * matriz->colunas, descritor_arquivo);
+    ret = fread(matriz->elementos, sizeof(float), matriz->linhas * matriz->colunas, descritor_arquivo); //leitura dos elementos da matriz
     if (ret < matriz->linhas * matriz->colunas) {
         fprintf(stderr, "Erro de leitura dos elementos da matriz\n");
         return NULL;
@@ -59,7 +62,7 @@ void escreve_matriz_bin(const char *arquivo, Matriz *matriz) {
     FILE * descritor_arquivo; //descritor do arquivo de saida
     size_t ret; //retorno da funcao de escrita no arquivo de saida
 
-    descritor_arquivo = fopen(arquivo, "wb");
+    descritor_arquivo = fopen(arquivo, "wb"); // abre o arquivo para escrita em binario
     if (!descritor_arquivo) {
         fprintf(stderr, "Erro de abertura do arquivo\n");
         return;
@@ -77,7 +80,7 @@ void escreve_matriz_bin(const char *arquivo, Matriz *matriz) {
         return;
     }
 
-    ret = fwrite(matriz->elementos, sizeof(float), matriz->linhas * matriz->colunas, descritor_arquivo);
+    ret = fwrite(matriz->elementos, sizeof(float), matriz->linhas * matriz->colunas, descritor_arquivo); //escrita dos elementos da matriz
     if (ret < matriz->linhas * matriz->colunas) {
         fprintf(stderr, "Erro de escrita dos elementos da matriz\n");
         return;
@@ -107,13 +110,14 @@ void *multiplica_matrizes(Matriz *A, Matriz *B, Matriz *C) {
 
 int main(int argc, char *argv[]) {
     Matriz *A, *B, *C;
-    double inicio_init, fim_init, inicio_mult, fim_mult, inicio_end, fim_end;
+    double inicio_init, fim_init, inicio_mult, fim_mult, inicio_end, fim_end; // Tempos de execução
 
     if (argc < 4) {
         fprintf(stderr, "Digite: %s <matriz1> <matriz2> <matriz_saida>\n", argv[0]);
         return 1;
     }
 
+    // Inicialização
     GET_TIME(inicio_init);
     A = le_matriz_bin(argv[1]);
     if (!A) return 2;
@@ -141,10 +145,12 @@ int main(int argc, char *argv[]) {
     }
     GET_TIME(fim_init);
 
+    // Multiplicação ou processamento
     GET_TIME(inicio_mult);
     multiplica_matrizes(A, B, C);
     GET_TIME(fim_mult);
 
+    // Finalização
     GET_TIME(inicio_end);
     // imprime_matriz(C);
     escreve_matriz_bin(argv[3], C);
@@ -157,9 +163,12 @@ int main(int argc, char *argv[]) {
     free(C);
     GET_TIME(fim_end);
 
+    #ifdef TEMPO
     // Exporta os tempos de execução em formato CSV
     //fprintf(stdout, "inicializacao, multiplicacao, finalizacao, total, threads\n");
-    fprintf(stdout, "%f, %f, %f, %f, seq\n", fim_init - inicio_init, fim_mult - inicio_mult, fim_end - inicio_end, fim_end - inicio_init);
+        fprintf(stdout, "%f, %f, %f, %f, seq\n", fim_init - inicio_init, fim_mult - inicio_mult, fim_end - inicio_end, fim_end - inicio_init);
+    #endif
+
     return 0;
 }
     

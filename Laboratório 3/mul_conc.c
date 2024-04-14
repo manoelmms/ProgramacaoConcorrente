@@ -1,5 +1,6 @@
 /*
  * Multiplicação de matrizes MxN e NxP de forma concorrente
+ * Recebendo duas matrizes em formato de arquivo binário e o número de threads
  */
 
 #include <stdio.h>
@@ -8,6 +9,7 @@
 #include <pthread.h>
 
 // #define TEST
+#define TEMPO
 
 typedef struct {
     int linhas;
@@ -69,7 +71,7 @@ int escreve_matriz_bin(const char *arquivo, Matriz *matriz) {
     FILE * descritor_arquivo; //descritor do arquivo de saida
     size_t ret; //retorno da funcao de escrita no arquivo de saida
 
-    descritor_arquivo = fopen(arquivo, "wb");
+    descritor_arquivo = fopen(arquivo, "wb");  // abre o arquivo para escrita em binario
     if (!descritor_arquivo) {
         fprintf(stderr, "Erro de abertura do arquivo\n");
         return -1;
@@ -87,7 +89,7 @@ int escreve_matriz_bin(const char *arquivo, Matriz *matriz) {
         return -3;
     }
 
-    ret = fwrite(matriz->elementos, sizeof(float), matriz->linhas * matriz->colunas, descritor_arquivo);
+    ret = fwrite(matriz->elementos, sizeof(float), matriz->linhas * matriz->colunas, descritor_arquivo); // escreve a matriz no arquivo
     if (ret < matriz->linhas * matriz->colunas) {
         fprintf(stderr, "Erro de escrita dos elementos da matriz\n");
         return -4;
@@ -105,8 +107,8 @@ void imprime_matriz(Matriz *matriz) {
 
 void *task_multiplica_matrizes(void *arg) {
     t_Args *args = (t_Args *) arg;
-    int start = args->id * args->block_size;
-    int end = start + args->block_size;
+    int start = args->id * args->block_size; // Início do bloco de linhas que a thread irá calcular
+    int end = start + args->block_size; // Bloco de linhas que a thread irá calcular
 
     // if (args->id == args->n_threads - 1) { 
     //     // Última thread calcula o restante
@@ -135,7 +137,7 @@ void *multiplica_matrizes(Matriz *A, Matriz *B, Matriz *C, int n_threads){
         fprintf(stderr, "Erro de alocação das threads\n");
         return NULL;
     }
-
+    // Divisão do trabalho entre as threads (cada thread calcula um bloco de linhas)
     int block_size = C->linhas / n_threads; // Ideal para poucas threads (CPU)
     if (!block_size) {
         fprintf(stderr, "Número de threads maior que a dimensao Linha da matriz\n");
@@ -149,6 +151,7 @@ void *multiplica_matrizes(Matriz *A, Matriz *B, Matriz *C, int n_threads){
             fprintf(stderr, "Erro de alocação dos argumentos\n");
             return NULL;
         }
+        // Inicializa os argumentos da thread i com os valores necessários e a matriz
         arg->block_size = block_size;
         arg->id = i;
         arg->n_threads = n_threads;
@@ -163,7 +166,7 @@ void *multiplica_matrizes(Matriz *A, Matriz *B, Matriz *C, int n_threads){
     }
 
     if (C->linhas % n_threads) {
-        // Houve resto na divisão, a thread principal calcula o restante
+        // Houve resto na divisão, a thread principal calcula o restante das linhas
         #ifdef TEST
             printf("Thread principal: %d - %d\n", block_size * n_threads, C->linhas % n_threads);
         #endif
@@ -190,8 +193,8 @@ void *multiplica_matrizes(Matriz *A, Matriz *B, Matriz *C, int n_threads){
 }
 
 int main(int argc, char *argv[]) {
-    Matriz *A, *B, *C;
-    double inicio_init, fim_init, inicio_mult, fim_mult, inicio_end, fim_end;
+    Matriz *A, *B, *C;  // Matrizes de entrada e saída
+    double inicio_init, fim_init, inicio_mult, fim_mult, inicio_end, fim_end; // Tempos de execução
 
     if (argc < 5) {
         fprintf(stderr, "Uso: %s <matriz1> <matriz2> <n_threads> <matriz_saida>\n", argv[0]);
@@ -203,6 +206,7 @@ int main(int argc, char *argv[]) {
         return 2;
     }
 
+    // Inicialização
     GET_TIME(inicio_init);
     // printf("Lendo matriz A\n");
     A = le_matriz_bin(argv[1]);
@@ -232,6 +236,7 @@ int main(int argc, char *argv[]) {
     }
     GET_TIME(fim_init);
 
+    // Multiplicação ou processamento
     GET_TIME(inicio_mult);
     multiplica_matrizes(A, B, C, n_threads);
     GET_TIME(fim_mult);
@@ -241,8 +246,9 @@ int main(int argc, char *argv[]) {
         imprime_matriz(C);
     #endif
 
+    // Finalização
     GET_TIME(inicio_end);
-    escreve_matriz_bin(argv[4], C); // TODO: Colocar no tempo de finalização ou no tempo de processamento?
+    escreve_matriz_bin(argv[4], C); // Escreve a matriz C no arquivo de saída
     
     free(A->elementos);
     free(A);
@@ -254,7 +260,10 @@ int main(int argc, char *argv[]) {
 
     // // Exporta os tempos de execução em formato CSV
     //fprintf(stdout, "inicializacao, multiplicacao, finalizacao, total, threads\n");
-    fprintf(stdout, "%f, %f, %f, %f, %d\n", fim_init - inicio_init, fim_mult - inicio_mult, fim_end - inicio_end, fim_end - inicio_init, n_threads);
+    #ifdef TEMPO
+        fprintf(stdout, "%f, %f, %f, %f, %d\n", fim_init - inicio_init, fim_mult - inicio_mult, fim_end - inicio_end, fim_end - inicio_init, n_threads);
+    #endif
+
     return 0;
 }
     
