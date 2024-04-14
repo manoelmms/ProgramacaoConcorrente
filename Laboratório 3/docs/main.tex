@@ -1,0 +1,194 @@
+\documentclass{article}
+
+% Language setting
+% Replace `english' with e.g. `spanish' to change the document language
+\usepackage[portuguese]{babel}
+
+% Set page size and margins
+% Replace `letterpaper' with `a4paper' for UK/EU standard size
+\usepackage[a4paper,top=2cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+
+% Useful packages
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+\usepackage{csvsimple}
+\usepackage{svg}
+
+\title{Relatório de Avaliação do Laboratório 3}
+\author{Manoel Marcelo da Silva\\
+Instituto de Computação -- Universidade Federal do Rio de Janeiro\\
+manoelms@ic.ufrj.br
+}
+
+\begin{document}
+\maketitle
+\begin{abstract}
+Este relatório mostrará as informações decorrentes do tempo de execução e o ganho de desempenho obtido em uma solução concorrente para o problema de multiplicação de matrizes. 
+ 
+\end{abstract}
+
+\section{Introdução}
+    
+O problema a ser solucionado é uma simples multiplicação matricial, de tal forma que as matrizes sejam $A_{nxm}$ e $B_{mxk}$ e seu resultado $C_{nxk}$, de forma sequencial e concorrente. Apesar de existir algoritmos mais eficientes para a multiplicação, usaremos um método "ingênuo" para justamente calcularmos mais facilmente a eficiência e velocidade do método concorrente em relação ao sequencial. O método de divisão de Threads escolhida foi a separação por linha em blocos divididos igualmente entre as threads (com o resto calculado na thread principal), devido aos poucos núcleos dedicados em processador comum, na ausência de um acelerador gráfico/GPU ou NPU.
+
+\section{Metodologia}
+
+Iremos rodar 3 tipos de matrizes randomizadas (float) quadradas de tamanho 500x500, 1000x1000 e 2000x2000 em 4 valores de threads criadas, sendo elas 1,2,4 e 8. Tais cálculos serão feitos em um MacBook Air M2 de 8 GB, que possui 8 núcleos - sendo 4 deles de eficiência - com um clock de 3.2 GHz cinco vezes para cada thread e em cada tamanho da matriz.
+
+Após os cálculos, as tabelas e a avaliação do desempenho serão feitas, calculando o tempo de execução em três etapas: 
+\begin{itemize}
+    \item Inicialização - Que se destina à leitura e alocação das matrizes
+    \item Processamento - A multiplicação em si
+    \item Finalização - Escrita e liberação da memória alocada
+\end{itemize}
+
+\section{Dados Levantados} %Mostrar a média e a variância de cada um, ou seja mais 3 tabelas threads x tempo
+Com os tempos de execução calculados, foi calculado a média e variância entre as execuções de mesmo tipo, ou seja, mesmo número de threads e a mesma dimensão da matriz processada. Foi constatado que a variância é extremamente pequena entre os testes e que o tempo de inicialização e de finalização é irrisório em relação ao processamento. Os dados tabelados se encontram no \href{https://github.com/manoelmms/ProgramacaoConcorrente/tree/main/Laborat%C3%B3rio%203}{Github} e no \href{https://docs.google.com/spreadsheets/d/e/2PACX-1vTQnAKS9FDfrzSS0-nxaO272PUTsR_goh3SSkq4inkiq3RSVcwrewy8TChOzmThnTi5VGR7H3NE0RDb/pubhtml}{Google Sheets}
+
+\subsection{Matriz 500x500}
+
+\begin{table}
+\centering
+\begin{tabular}{c|c|c|c|c}%
+    \textbf{Nº Threads} & \textbf{Inicialização (s)} & \textbf{Processamento (s)} & \textbf{Finalização(s)}
+        & \textbf{Total(s)} % specify table head
+    \csvreader[head to column names]{500_result.csv}{}% use head of csv as column names
+    {\\\hline\csvcolv&\csvcoli&\csvcolii&\csvcoliii&\csvcoliv}% specify your coloumns here
+\end{tabular}
+\caption{\label{tab:widgets}500x500}
+\end{table}
+
+\begin{table}
+\centering
+\begin{tabular}{c|c|c|c|c}%
+    \textbf{Nº Threads} & \textbf{Inicialização (s)} & \textbf{Processamento (s)} & \textbf{Finalização(s)} & \textbf{Total(s)} % specify table head
+    \csvreader[head to column names]{Threads_500.csv}{}% use head of csv as column names
+    {\\\hline\csvcoli&\csvcolii&\csvcoliii&\csvcoliv&\csvcolv}% specify your coloumns here
+\end{tabular}
+\caption{\label{tab:widgets}Média dos valores em 500x500}
+\end{table}
+
+\begin{figure}
+\centering
+\includegraphics[width=0.9\linewidth]{Tempo de Processamento Concorrente (500x500).png}
+\caption{\label{fig:frog}Tempo em média de processamento na multiplicação de matrizes 500x500}
+\end{figure}
+
+\subsection{Matriz 1000x1000}
+\begin{table}
+\centering
+\begin{tabular}{c|c|c|c|c}%
+    \textbf{Nº Threads} & \textbf{Inicialização (s)} & \textbf{Processamento (s)} & \textbf{Finalização(s)}
+        & \textbf{Total(s)} % specify table head
+    \csvreader[head to column names]{1000_result.csv}{}% use head of csv as column names
+    {\\\hline\csvcolv&\csvcoli&\csvcolii&\csvcoliii&\csvcoliv}% specify your coloumns here
+\end{tabular}
+\caption{\label{tab:widgets}1000x1000}
+\end{table}
+
+\begin{table}
+\centering
+\begin{tabular}{c|c|c|c|c}%
+    \textbf{Nº Threads} & \textbf{Inicialização (s)} & \textbf{Processamento (s)} & \textbf{Finalização(s)} & \textbf{Total(s)} % specify table head
+    \csvreader[head to column names]{Threads_1000.csv}{}% use head of csv as column names
+    {\\\hline\csvcoli&\csvcolii&\csvcoliii&\csvcoliv&\csvcolv}% specify your coloumns here
+\end{tabular}
+\caption{\label{tab:widgets}Média dos valores em 1000x1000}
+\end{table}
+
+\begin{figure}
+\centering
+\includegraphics[width=0.9\linewidth]{Tempo de Processamento Concorrente (1000x1000).png}
+\caption{\label{fig:frog}Tempo em média de processamento na multiplicação de matrizes 1000x1000}
+\end{figure}
+
+\subsection{Matriz 2000x2000}
+\begin{table}
+\centering
+\begin{tabular}{c|c|c|c|c}%
+    \textbf{Nº Threads} & \textbf{Inicialização (s)} & \textbf{Processamento (s)} & \textbf{Finalização(s)}
+        & \textbf{Total(s)} % specify table head
+    \csvreader[head to column names]{2000_result.csv}{}% use head of csv as column names
+    {\\\hline\csvcolv&\csvcoli&\csvcolii&\csvcoliii&\csvcoliv}% specify your coloumns here
+\end{tabular}
+\caption{\label{tab:widgets}2000x2000}
+\end{table}
+
+\begin{table}
+\centering
+\begin{tabular}{c|c|c|c|c}%
+    \textbf{Nº Threads} & \textbf{Inicialização (s)} & \textbf{Processamento (s)} & \textbf{Finalização(s)} & \textbf{Total(s)} % specify table head
+    \csvreader[head to column names]{Threads_2000.csv}{}% use head of csv as column names
+    {\\\hline\csvcoli&\csvcolii&\csvcoliii&\csvcoliv&\csvcolv}% specify your coloumns here
+\end{tabular}
+\caption{\label{tab:widgets}Média dos valores em 2000x2000}
+\end{table}
+
+\begin{figure}
+\centering
+\includegraphics[width=0.9\linewidth]{Tempo de Processamento Concorrente (2000x2000).png}
+\caption{\label{fig:frog}Tempo em média de processamento na multiplicação de matrizes 2000x2000}
+\end{figure}
+
+\newpage
+\section{Analise da Aceleração e Eficiência}
+A partir dos dados coletados acima, podemos calcular a aceleração e a eficiência do código em relação ao sequencial. Para o cálculo da aceleração é a razão entre o tempo de execução da versão sequencial do algoritmo ($Ts(n)$) e o tempo de execução da versão concorrente ($Tp(n, p)$) usando p processadores. Enquanto o cálculo da eficiência é a razão entre a aceleração e o número de processadores usado.
+
+\subsection{Aceleração}
+ Com o cálculo mostrado acima temos os seguintes gráficos: 
+% falar sobre a Lei de Amdahl para o cálculo da aceleração
+% conclusão sobre os dados
+
+\subsubsection{500x500}
+\begin{figure}[ht!]
+  \centering
+  \begin{minipage}[b]{0.49\textwidth}
+    \includegraphics[width=\textwidth]{Aceleração (500x500).png}
+    \caption{Aceleração (500x500).}
+  \end{minipage}
+  \hfill
+  \begin{minipage}[b]{0.49\textwidth}
+    \includegraphics[width=\textwidth]{Eficiência (500x500).png}
+    \caption{Eficiência (500x500).}
+  \end{minipage}
+\end{figure}
+
+\subsubsection{1000x1000}
+\begin{figure}[ht!]
+  \centering
+  \begin{minipage}[b]{0.49\textwidth}
+    \includegraphics[width=\textwidth]{Aceleração (1000x1000).png}
+    \caption{Aceleração (1000x1000).}
+  \end{minipage}
+  \hfill
+  \begin{minipage}[b]{0.49\textwidth}
+    \includegraphics[width=\textwidth]{Eficiência (1000x1000).png}
+    \caption{Eficiência (1000x1000).}
+  \end{minipage}
+\end{figure}
+
+\clearpage
+\subsubsection{2000x2000}
+\begin{figure}[ht!]
+  \centering
+  \begin{minipage}[b]{0.49\textwidth}
+    \includegraphics[width=\textwidth]{Aceleração (2000x2000).png}
+    \caption{Aceleração (2000x2000).}
+  \end{minipage}
+  \hfill
+  \begin{minipage}[b]{0.49\textwidth}
+    \includegraphics[width=\textwidth]{Eficiência (2000x2000).png}
+    \caption{Eficiência (2000x2000.}
+  \end{minipage}
+\end{figure}
+
+\section{Conclusão}
+
+Como podemos perceber pelos gráficos acima, a versão concorrente é muito mais eficiente e ágil que a sequencial, exceto no caso em que há apenas uma thread, já que ocorre uma penalidade em relação ao processamento de criação das threads.
+
+Contudo, é visível que a eficiência decai após o uso de 4 núcleos. Isso pode ser explicado por conta da presença dos núcleos de eficiência do processador, já que o sistema operacional - no caso, MacOS (baseado em UNIX) - escalona a thread para esses núcleos que são mais fracos em termos de performance. Mas, até 4 threads a aceleração sobe em rítmo quase linear, com eficiência bem próxima de 1 - o ideal.
+
+Portanto, o código concorrente traz muitas vantagens em relação ao tradicional sequencial em termos de eficiência e performance, podendo ser escalonado para um processador com mais núcleos ou um acelerador para mais desempenho.
+
+\end{document}
