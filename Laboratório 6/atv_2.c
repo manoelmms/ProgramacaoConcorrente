@@ -5,15 +5,16 @@
  */
 
 #include <stdio.h>
-#include <pthreads.h>
+#include <pthread.h>
 #include <semaphore.h>
 #include <stdlib.h>
 #include <math.h>
 
 // Variáveis globais
-buffer[tam_buffer];
 sem_t empty, full; // Semáforos para controle de buffer
 sem_t mutex; // Semáforo para exclusão mútua
+long long int *buffer; // Buffer para armazenar os números
+int tam_buffer; // Tamanho do buffer
 
 typedef struct {
     FILE *file;
@@ -58,35 +59,40 @@ void *producer(void *arg){
     while (fread(&number_read, sizeof(long long int), 1, args->file)) {
         insert_buffer(number_read);
     }
-    insert_buffer(-1); // Insere um número inválido para finalizar a execução
-    
+    insert_buffer(-1); // Insere um número inválido para indicar o fim do arquivo
+
     if(fclose(args->file)) {
         fprintf(stderr, "Erro ao fechar o arquivo\n");
-        return 2;
+        exit(1);
     }
     free(args);
+    printf("Produtor finalizado\n");
     pthread_exit(NULL);
 }
 
-void *consumer(void *arg) {
+void *consumer(void *arg) { //TODO: Loop nas outras threads e nao retorna corretamente
+    int *local_primes = (int *) malloc(sizeof(int));
+    if (!local_primes) {
+        fprintf(stderr, "Erro de alocação\n");
+        exit(1);
+    } // TODO: FREE! 
+
     long long int number;
-    int local_primes = 0;
     while (1) {
         number = remove_buffer();
-        if (number == -1) break; // Se for um número inválido, finaliza a execução
-        if (is_prime(number)) local_primes++; // Verifica se o número é primo
+        if (number == -1) break; // Verifica se é o fim do arquivo
+        if (is_prime(number)) local_primes++;
     }
     pthread_exit((void *) local_primes);
 }
 
+
 int main (int argc, char *argv[]) {
     // Variáveis locais
-    int n_threads;
     int total_primes = 0;
     int max_primes = 0;
     int thread_max_primes = 0;
     pthread_t *tid;
-    int tam_buffer;
     int n_consumers;
 
     // Recebe e valida os parâmetros de entrada
@@ -102,12 +108,18 @@ int main (int argc, char *argv[]) {
         fprintf(stderr, "O número de threads consumidoras e o tamanho do buffer devem ser maiores que 0\n");
         return 2;
     }
+    // inicializa o buffer
+    buffer = (long long int *) malloc(sizeof(long long int) * tam_buffer);
+    if (!buffer) {
+        fprintf(stderr, "Erro de alocação do Buffer\n");
+        return 3;
+    }
 
     // Abre o arquivo de entrada
     FILE *file = fopen(argv[3], "rb");
     if (!file) {
         fprintf(stderr, "Erro ao abrir o arquivo de entrada\n");
-        return 3;
+        return 4;
     }
 
     // Inicializa as variáveis de controle
@@ -119,7 +131,7 @@ int main (int argc, char *argv[]) {
     tid = (pthread_t *) malloc(sizeof(pthread_t) * n_consumers+1); // n_consumers consumidores + 1 produtor
     if (!tid) {
         fprintf(stderr, "Erro de alocação\n");
-        return 4;
+        return 5;
     }
 
     // Cria as threads consumidoras e produtora
@@ -127,13 +139,13 @@ int main (int argc, char *argv[]) {
     arg->file = file;
     if (pthread_create(tid, NULL, producer, (void *) arg)) {
         fprintf(stderr, "Erro na criação da thread produtora\n");
-        return 5;
+        return 6;
     }
     
-    for (int i = 1; i <= n_consumers; i++) {
+    for (int i = 1; i <= n_consumers+1; i++) {
         if (pthread_create(tid+i, NULL, consumer, NULL)) {
             fprintf(stderr, "Erro na criação da thread consumidora %d\n", i);
-            return 6;
+            return 7;
         }
     }
 
@@ -142,7 +154,7 @@ int main (int argc, char *argv[]) {
         int local_primes;
         if (pthread_join(*(tid+i), (void **) &local_primes)) {
             fprintf(stderr, "Erro na junção da thread %d\n", i);
-            return 7;
+            return 8;
         }
         if (i == 0) continue; // Pula a thread produtora
         
