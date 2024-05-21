@@ -1,0 +1,10 @@
+\question O TAD lista implementado nesses arquivos poderia ser compartilhado por threads
+de um programa concorrente? Com qual finalidade e de que forma?
+%\begin{parts}
+    %\part Woah, subpart!
+\begin{solution}
+    O tipo abstrato de dados implementado nestes arquivos pode ser compartilhado sim por threads em um programa concorrente, desde que seja garantido que a implementação de seu uso seja thread safe, ou seja, que garanta sua execução sem problemas concorrentes como corrida de dados. Seu uso é imprescindível em alguns algoritmos que se necessita de uma estrutura de dados que seja bastante dinâmica, com alocação dinâmica de memória, que permite adicionar e remover elementos facilmente, sem a necessidade de alocar espaço fixo no início.
+    
+    Em um programa concorrente em que várias threads acessem o mesmo TAD, no escopo global/compartilhado, caso seja alterado - o que é bem provável que ocorra nesse tipo de estrutura - é necessário garantir que apenas uma thread o acesse, usando de mecanismos como exclusão mútua ou de sincronização. 
+\end{solution}
+%\end{parts}

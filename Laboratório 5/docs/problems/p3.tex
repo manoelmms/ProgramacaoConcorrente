@@ -1,0 +1,7 @@
+\question O que acontece com o tempo de execução do programa quando aumentamos o número de threads? Por que isso ocorre?
+%\begin{parts}
+    %\part Woah, subpart!
+\begin{solution}
+    Após um certo número de threads o tempo de execução do programa aumenta relativamente, isso se deve à necessidade de troca de contexto/overhead por conta da obrigação da sequencialização do trecho do código, como se fosse uma fila. Ao aumentar bastante o número dessas threads, essa fila aumenta cada vez mais, consequentemente aumentando o tempo de espera e seu tempo de execução.
+\end{solution}
+%\end{parts}

@@ -1,0 +1,8 @@
+\question O que poderia acontecer se o programa não implementasse exclusão mútua no
+acesso as operações da lista encadeada?
+%\begin{parts}
+    %\part Woah, subpart!
+\begin{solution}
+    Neste caso, poderia acontecer de uma thread alterar o valor/chave de um nó enquanto outra thread a lê, assim causando inconsistências no resultado; Além disso é possível que ocorra o acesso a um nó deletado por uma thread por outra, causando segmentation fault; Inconsistências na lista também podem acontecer, ao inserir um novo nó na lista enquanto também é inserido outro nó por outra thread. Assim, ao não garantir uma exclusão mútua, causa-se esses problemas ao executar essas funções concorrentemente.
+\end{solution}
+%\end{parts}

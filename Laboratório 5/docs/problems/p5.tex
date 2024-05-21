@@ -1,0 +1,7 @@
+\question Em que tipo de aplicação concorrente o padrão de sincronização coletiva com barreira precisa ser usado?
+%\begin{parts}
+    %\part Woah, subpart!
+\begin{solution}
+    Existem vários tipos de aplicações e algoritmos em que é necessário garantir que todas as etapas de determinada iteração estejam concluídas antes que passe para a próxima fase/etapa do algoritmo, como por exemplo o Simplex ou Gauss-Jacobi. Neste contexto, a barreira é um tipo de sincronização coletiva que suspende a execução das threads de um aplicação em um dado ponto do código e somente permite que as threads prossigam quando todas elas tiverem chegado naquele ponto.
+\end{solution}
+%\end{parts}

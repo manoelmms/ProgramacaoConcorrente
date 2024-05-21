@@ -1,0 +1,8 @@
+\question Em quais cenários o uso do rwlock pode ser mais vantajoso que o uso do lock de
+exclusão mútua?
+%\begin{parts}
+    %\part Woah, subpart!
+\begin{solution}
+    O uso de `rwlock` (mutex de leitura-escrita) pode ser mais vantajoso que o uso de `lock` de exclusão mútua em cenários onde há um grande número de operações de leitura e um número menor de operações de escrita. O `rwlock` permite que várias threads leiam simultaneamente, desde que não haja nenhuma thread escrevendo, o que pode melhorar significativamente o desempenho em comparação com um `lock` de exclusão mútua tradicional, que em contraste, restringem tanto a leitura quanto a escrita, o que pode causar contenção e penalizar o desempenho.
+\end{solution}
+%\end{parts}

@@ -1,0 +1,39 @@
+\documentclass[answers]{exam}
+\usepackage[portuguese]{babel}
+
+\usepackage[T1]{fontenc}
+
+\input{preamble.tex}
+\input{macros.tex}
+
+\renewcommand{\questionlabel}{\textbf{Questão \thequestion.}}
+\renewcommand{\solutiontitle}{}
+
+\title{{Laboratório 5}
+	\\
+{Programação Concorrente}}
+\author{Manoel Marcelo da Silva - 121088349\\
+Instituto de Computação -- Universidade Federal do Rio de Janeiro\\
+manoelms@ic.ufrj.br}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{questions}
+    % I recommend splitting into files for each problem
+    \input{problems/p1.tex}
+    \input{problems/p2.tex}
+    \input{problems/p3.tex}
+    \newpage
+    \input{problems/p4.tex}
+    \input{problems/p5.tex}
+
+\end{questions}
+
+% % in case of needing citations
+% \bibliographystyle{plainurl}
+% \bibliography{refs}
+
+\end{document}
