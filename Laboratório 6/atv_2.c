@@ -2,6 +2,7 @@
  * Solução concorrente para a quantidade de números primos em um arquivo de entrada binario
  * De forma ingênua e usando consumidores e produtores em um buffer pequeno
  * com apenas semáforos
+ * Aviso: NÃO funciona no MacOS, pois não existe implementacao de semáforos POSIX!
  */
 
 #include <stdio.h>
@@ -45,11 +46,17 @@ long long int remove_buffer() {
     long long int number;
     sem_wait(&full); // espera o slot cheio no buffer
     sem_wait(&mutex); 
+    if (buffer[out] == -1) { // Verifica se é o fim do arquivo
+        sem_post(&mutex);
+        sem_post(&empty); 
+	    sem_post(&full); 
+        return -1;
+    }
     number = buffer[out]; // Pega o número do buffer
     buffer[out] = 0; // Apaga o número do buffer (opcional)
     out = (out + 1) % tam_buffer; // Atualiza a posição de remoção 
     sem_post(&mutex);
-    sem_post(&empty);
+    sem_post(&empty); 
     return number;
 }
 
@@ -66,24 +73,30 @@ void *producer(void *arg){
         exit(1);
     }
     free(args);
-    printf("Produtor finalizado\n");
+    // printf("Produtor finalizado\n");
     pthread_exit(NULL);
 }
 
-void *consumer(void *arg) { //TODO: Loop nas outras threads e nao retorna corretamente
+void *consumer(void *arg) { 
     int *local_primes = (int *) malloc(sizeof(int));
     if (!local_primes) {
         fprintf(stderr, "Erro de alocação\n");
-        exit(1);
-    } // TODO: FREE! 
+        pthread_exit(NULL);
+    } 
+    *local_primes = 0;
 
     long long int number;
     while (1) {
         number = remove_buffer();
+	// printf("%lld\n", number);
         if (number == -1) break; // Verifica se é o fim do arquivo
-        if (is_prime(number)) local_primes++;
+        if (is_prime(number)) (*local_primes)++;
     }
-    pthread_exit((void *) local_primes);
+    // printf("\nConsumidor finalizado\n");
+    // printf("Número de primos encontrados: %d\n", *local_primes);
+    // printf("Endereço do local_primes: %p\n", local_primes);
+
+    pthread_exit((void*) local_primes);
 }
 
 
@@ -94,6 +107,7 @@ int main (int argc, char *argv[]) {
     int thread_max_primes = 0;
     pthread_t *tid;
     int n_consumers;
+    int *return_primes = NULL;
 
     // Recebe e valida os parâmetros de entrada
     if (argc < 4) {
@@ -142,7 +156,8 @@ int main (int argc, char *argv[]) {
         return 6;
     }
     
-    for (int i = 1; i <= n_consumers+1; i++) {
+    for (int i = 1; i <= n_consumers; i++) {
+        // printf("Criando thread consumidora %d\n", i);
         if (pthread_create(tid+i, NULL, consumer, NULL)) {
             fprintf(stderr, "Erro na criação da thread consumidora %d\n", i);
             return 7;
@@ -150,19 +165,18 @@ int main (int argc, char *argv[]) {
     }
 
     // Aguarda o término das threads consumidoras e produtora
-    for (int i = 0; i <= n_consumers; i++) {
-        int local_primes;
-        if (pthread_join(*(tid+i), (void **) &local_primes)) {
-            fprintf(stderr, "Erro na junção da thread %d\n", i);
+    for (int i = 1; i <= n_consumers; i++) {
+        if (pthread_join(*(tid+i), (void**) &return_primes)) {
+            fprintf(stderr, "Erro no join das threads\n");
             return 8;
         }
-        if (i == 0) continue; // Pula a thread produtora
-        
-        printf("Thread %d encontrou %d números primos\n", i, local_primes);
-        total_primes += local_primes;
-        if (local_primes > max_primes) {
-            max_primes = local_primes;
-            thread_max_primes = i;
+        if (return_primes) {
+            total_primes += *return_primes;
+            if (*return_primes > max_primes) {
+                max_primes = *return_primes;
+                thread_max_primes = i;
+            }
+            free(return_primes);
         }
     }
 
@@ -172,6 +186,9 @@ int main (int argc, char *argv[]) {
 
     // Libera a memória alocada
     free(tid);
+    free(buffer);
+
+    // Finaliza os semáforos
     sem_destroy(&empty);
     sem_destroy(&full);
     sem_destroy(&mutex);
